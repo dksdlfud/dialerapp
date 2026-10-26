@@ -343,9 +343,17 @@ fun groupKey(name: String): String {
 
 fun loadContacts(ctx: Context): List<Entry> {
     val out = mutableListOf<Entry>()
-    val P = ContactsContract.CommonDataKinds.Phone
+
+    val uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+    val nameColumn = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+    val numberColumn = ContactsContract.CommonDataKinds.Phone.NUMBER
+
     ctx.contentResolver.query(
-        P.CONTENT_URI, arrayOf(P.DISPLAY_NAME, P.NUMBER), null, null, P.DISPLAY_NAME + " ASC"
+        uri,
+        arrayOf(nameColumn, numberColumn),
+        null,
+        null,
+        "$nameColumn ASC"
     )?.use { c ->
         while (c.moveToNext()) {
             val name = c.getString(0) ?: continue
@@ -353,7 +361,10 @@ fun loadContacts(ctx: Context): List<Entry> {
             out += Entry(name, num, num)
         }
     }
-    return out.distinctBy { it.name + it.number.filter(Char::isDigit) }
+
+    return out.distinctBy {
+        it.name + it.number.filter(Char::isDigit)
+    }
 }
 
 private fun sameDay(a: Calendar, b: Calendar) =
